@@ -1,37 +1,39 @@
 # Praise.Army — Emergency Access Page
 
-Static, fully self-contained fallback for the [BibleMem](https://praise.army) Bible
-Memorization tool, meant to keep working even if the main Vultr/Proxmox servers are down.
+Static site serving two things at the same domain:
 
-No backend, no proxy, no server-held secrets:
+- **`/`** — the original songs page, untouched.
+- **`/biblemem/`** — a static port of the BibleMem Bible Memorization tool from
+  joshua.tel/praise-army, meant to keep working even if the main Vultr/Proxmox servers are down.
+
+No backend, no live proxy, no server-held secrets at request time:
 
 - **Verse text** — bundled `web/public/data/bible.txt`, parsed client-side.
 - **Sign-in / presets / font size** — direct Firebase client SDK calls (Auth + Firestore),
   same project (`praisearmy-firebase`) and same security rules as the main app.
-- **Audio** — streamed directly from Google Drive in the browser (the folder is shared
-  "Anyone with the link"), using a static `web/public/data/bibleMemIndex.json` index that
-  maps book/chapter/verse to a Drive file ID.
+- **Audio** — streamed directly from Google Drive in the browser, using a static
+  `web/public/data/bibleMemIndex.json` index that maps book/chapter/verse to a Drive file ID
+  **and resourcekey**. Drive requires a resourcekey for anonymous access to items shared
+  before ~2021, even when "Anyone with the link" is on, and it's per-file — not shared with
+  the containing folder — so it has to be looked up per verse, not just copied from the
+  folder's share link.
 
 ## Structure
 
-- `web/` — the Vite + React app that gets built and deployed to GitHub Pages.
-- `scripts/export-bible-index.mjs` — regenerates `web/public/data/bibleMemIndex.json` from
-  the live Firestore `BibleMem`/`config` collections (Admin-SDK-only; the client has no read
-  rule for that raw data, which is why this export exists at all).
-- `.github/workflows/deploy-pages.yml` — builds `web/` and deploys it via GitHub Pages
-  (Actions-based deployment).
-- `.github/workflows/export-bible-index.yml` — `workflow_dispatch` job that runs the export
-  script and commits the updated index. Requires a repo secret `FIREBASE_SERVICE_ACCOUNT_JSON`
-  (Firebase Admin key) — used only inside the Actions runner, never committed or exposed to
-  visitors.
+- `web/` — the Vite + React app; `vite.config.ts` sets `base: "/biblemem/"` so it deploys as a
+  subpath alongside the untouched root `index.html`.
+- `scripts/export-bible-index.mjs` — crawls the public Bible MP3 Drive folder directly
+  (mirrors the original `bible_upload.py` folder traversal: chapter folders → verse files),
+  using an authenticated service account to fetch each file's `id` and `resourceKey`. Writes
+  `web/public/data/bibleMemIndex.json`. Runs fresh on every deploy — not committed to git.
+- `.github/workflows/deploy.yml` — the only workflow. One job: run the export, build `web/`,
+  assemble `index.html` (root) + `web/dist` (`/biblemem/`) into one artifact, deploy to Pages.
+  Runs on every push to `main`.
 
-## One-time setup (manual, not automatable from git)
+## One-time setup
 
-1. **Settings → Pages → Build and deployment → Source: "GitHub Actions"** (this repo currently
-   serves the placeholder `index.html` from the branch root; switching this lets
-   `deploy-pages.yml` take over).
-2. **Settings → Secrets and variables → Actions → New repository secret** —
-   `FIREBASE_SERVICE_ACCOUNT_JSON`, the same Firebase Admin service-account JSON already used
-   by the main app's deploy workflows.
-3. Run the **"Export Bible Audio Index"** workflow once (Actions tab → Run workflow) to
-   populate `bibleMemIndex.json` with real data. Re-run it whenever the audio library changes.
+- **Settings → Pages → Build and deployment → Source: "GitHub Actions"** (already done).
+- **Repo secret `FIREBASE_SERVICE_ACCOUNT_JSON`** — the same Firebase Admin service-account
+  JSON used by the main app's deploy workflows. Needs Drive read access to the Bible MP3
+  folder (same account the original backend used) — used only inside the Actions runner,
+  never committed or exposed to visitors.

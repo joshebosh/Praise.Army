@@ -163,7 +163,7 @@ function BibleMem({ user }: { user: User }) {
           continue;
         }
 
-        const audio = new Audio(driveAudioUrl(verseData.fileId));
+        const audio = new Audio(driveAudioUrl(verseData));
         currentAudioRef.current = audio;
         setCurrentPlayingVerse(v);
 

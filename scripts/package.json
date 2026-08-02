@@ -3,6 +3,6 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "firebase-admin": "^12.3.1"
+    "google-auth-library": "^9.14.1"
   }
 }
