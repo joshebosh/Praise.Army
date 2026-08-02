@@ -1,0 +1,8 @@
+{
+  "name": "praise-army-export-scripts",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "firebase-admin": "^12.3.1"
+  }
+}
