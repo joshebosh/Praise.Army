@@ -273,9 +273,14 @@ function BibleMem({ user }: { user: User }) {
       <div className="card">
         <div className="header-row">
           <h1>Bible Memorization Tool</h1>
-          <button className="btn btn-outline" onClick={() => signOut(firebaseAuth)}>
-            Sign out
-          </button>
+          <div className="controls-row" style={{ marginBottom: 0 }}>
+            <a href="/" className="btn btn-outline">
+              &larr; Songs
+            </a>
+            <button className="btn btn-outline" onClick={() => signOut(firebaseAuth)}>
+              Sign out
+            </button>
+          </div>
         </div>
         <p className="subtitle">Emergency access — select verses to memorize and play them repeatedly.</p>
       </div>
