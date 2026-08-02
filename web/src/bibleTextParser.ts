@@ -8,7 +8,7 @@ export async function loadBibleText(): Promise<void> {
   if (bibleVerses) return;
 
   try {
-    const response = await fetch("/data/bible.txt");
+    const response = await fetch(`${import.meta.env.BASE_URL}data/bible.txt`);
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }

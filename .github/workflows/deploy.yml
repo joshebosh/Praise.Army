@@ -1,4 +1,8 @@
-name: Deploy Emergency Page
+name: Deploy Praise Army (Songs + BibleMem)
+
+# One workflow, one artifact: the original songs page at "/" plus the
+# BibleMem app at "/biblemem/". Runs the Firestore export and the build in
+# the same job so the deployed audio index is never stale.
 
 on:
   push:
@@ -25,24 +29,35 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-          cache-dependency-path: web/package-lock.json
 
-      - name: Install dependencies
+      - name: Export Bible audio index from Firestore
+        working-directory: scripts
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          npm install
+          node export-bible-index.mjs
+
+      - name: Install BibleMem dependencies
         working-directory: web
         run: npm ci
 
-      - name: Build
+      - name: Build BibleMem
         working-directory: web
         run: npm run build
 
-      - name: Add CNAME to build output
-        run: cp CNAME web/dist/CNAME
+      - name: Assemble combined site
+        run: |
+          mkdir -p site
+          cp index.html site/
+          cp CNAME site/
+          mkdir -p site/biblemem
+          cp -r web/dist/. site/biblemem/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: web/dist
+          path: site
 
   deploy:
     needs: build

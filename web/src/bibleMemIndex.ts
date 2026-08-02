@@ -22,7 +22,7 @@ let cached: BibleMemIndex | null = null;
 
 export async function loadBibleMemIndex(): Promise<BibleMemIndex> {
   if (cached) return cached;
-  const res = await fetch("/data/bibleMemIndex.json");
+  const res = await fetch(`${import.meta.env.BASE_URL}data/bibleMemIndex.json`);
   cached = (await res.json()) as BibleMemIndex;
   return cached;
 }
