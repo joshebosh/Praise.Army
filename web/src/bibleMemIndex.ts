@@ -39,8 +39,15 @@ export function sortedVerses(book: BookEntry, chapter: string): string[] {
   return Object.keys(book.chapters[chapter] || {}).sort((a, b) => Number(a) - Number(b));
 }
 
-// Direct client -> Google Drive stream, no key/proxy needed since the
-// folder is shared "Anyone with the link: Viewer".
+// Direct client -> Google Drive stream (folder shared "Anyone with the
+// link: Viewer"). NOTE: the Drive API v3 `alt=media` endpoint was tried as
+// a more "official" alternative and confirmed NOT to work with an API key
+// alone (404 on both metadata and content, even with the correct referrer,
+// against a real file ID) -- Drive's per-file ACL model requires OAuth
+// regardless of sharing settings. Reverted to this hotlink pattern; if
+// playback still fails, check the on-page error banner / console for the
+// actual DOMException name+message (added in App.tsx) rather than guessing
+// again.
 export function driveAudioUrl(fileId: string): string {
   return `https://drive.google.com/uc?export=download&id=${fileId}`;
 }

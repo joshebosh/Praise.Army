@@ -171,10 +171,23 @@ function BibleMem({ user }: { user: User }) {
           await audio.play();
           await new Promise<void>((resolve) => {
             audio.addEventListener("ended", () => resolve(), { once: true });
-            audio.addEventListener("error", () => resolve(), { once: true });
+            audio.addEventListener(
+              "error",
+              () => {
+                const code = audio.error?.code;
+                const message = audio.error?.message || "unknown media error";
+                console.error(`[BibleMem] audio error for ${selectedBook} ${selectedChapter}:${v}`, code, message);
+                setStatus(`Audio error for ${selectedBook} ${selectedChapter}:${v}: ${message}`);
+                resolve();
+              },
+              { once: true },
+            );
           });
-        } catch {
-          setStatus(`Playback failed for ${selectedBook} ${selectedChapter}:${v}`);
+        } catch (err) {
+          const name = err instanceof DOMException ? err.name : "Error";
+          const message = err instanceof Error ? err.message : String(err);
+          console.error(`[BibleMem] play() failed for ${selectedBook} ${selectedChapter}:${v}`, name, message);
+          setStatus(`Playback failed for ${selectedBook} ${selectedChapter}:${v} (${name}: ${message})`);
         }
         currentAudioRef.current = null;
       }
