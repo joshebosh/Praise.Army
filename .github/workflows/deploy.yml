@@ -42,27 +42,6 @@ jobs:
         with:
           node-version: 20
 
-      # TEMPORARY: diagnose "Failed to fetch" in production. The key never
-      # appears in output -- only status codes/response bodies, which GitHub
-      # also auto-masks if they happened to contain the secret value anyway.
-      - name: Diagnose Drive API key (no key value printed)
-        env:
-          KEY: ${{ secrets.GOOGLE_DRIVE_API_KEY }}
-        run: |
-          test_file() {
-            local label="$1" fileid="$2" rkey="$3"
-            echo "=== $label ($fileid) ==="
-            curl -sS -o /tmp/resp.json -w "HTTP_STATUS=%{http_code}\n" \
-              -H "Referer: https://praise.army/biblemem/" \
-              -H "X-Goog-Drive-Resource-Keys: ${fileid}/${rkey}" \
-              "https://www.googleapis.com/drive/v3/files/${fileid}?fields=id,name,mimeType,size&key=${KEY}"
-            cat /tmp/resp.json
-            echo ""
-          }
-          test_file "Genesis 1:1"   "0ByK9asbulrf_TzRDNEJNcE1QWlk" "0-jzTWf9VAw5yrFFgcchnt6g"
-          test_file "Matthew 1:2"   "0ByK9asbulrf_Q0Z3WUczcjRoZ00" "0-O9zmhI1IO0HW8YysxaH_Qg"
-          test_file "II Kings 1:2"  "0ByK9asbulrf_eFJrWWFzUUNWQWM" "0-5ZjyGj8VN6-a1RgPHLFOSw"
-
       - name: Export Bible audio index from Drive
         if: github.event.inputs.refresh_index == 'true'
         working-directory: scripts
