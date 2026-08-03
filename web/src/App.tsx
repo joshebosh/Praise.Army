@@ -274,6 +274,15 @@ function BibleMem({ user }: { user: User }) {
         setCurrentPlayingChapter(item.chapter);
         setCurrentPlayingVerse(Number(item.verse));
 
+        // Follow along: update the text display to the verse actually
+        // playing right now, not just whatever was in the picker when Play
+        // was clicked -- matters most for whole-chapter/whole-book playback,
+        // where the queue moves well past the initial selection.
+        const liveText = getVerseText(selectedBook, Number(item.chapter), Number(item.verse));
+        if (liveText) {
+          setVerseTexts([{ verse: Number(item.verse), text: liveText }]);
+        }
+
         try {
           audio.currentTime = 0;
           await audio.play();
