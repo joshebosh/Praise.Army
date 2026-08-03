@@ -46,10 +46,13 @@ export function sortedVerses(book: BookEntry, chapter: string): string[] {
 
 // Public, referrer-restricted key (Google Cloud Console -> APIs & Services
 // -> Credentials), restricted to: API = Google Drive API only,
-// Application = HTTP referrers -> https://praise.army/*. Same trust model
-// as the Firebase web config in firebase.ts -- not a secret, the
-// restrictions themselves are the security boundary.
-const DRIVE_API_KEY = "AIzaSyAlAMhsUTjpNC-a7BISCE4vhDfUSINMua0";
+// Application = HTTP referrers -> https://praise.army/*. Injected at build
+// time from the GOOGLE_DRIVE_API_KEY repo secret (see deploy.yml) so the
+// raw value never appears in source/git -- even though it ends up in the
+// shipped JS bundle either way (the restrictions are what make it safe to
+// expose there, not keeping it out of the bundle, which isn't possible for
+// a browser-facing key).
+const DRIVE_API_KEY = import.meta.env.VITE_DRIVE_API_KEY;
 
 // Fetches a verse's audio bytes and returns a local blob: URL for <audio
 // src>. Can't just point <audio src> at Drive directly: the v3 API requires

@@ -66,6 +66,8 @@ jobs:
 
       - name: Build BibleMem
         working-directory: web
+        env:
+          VITE_DRIVE_API_KEY: ${{ secrets.GOOGLE_DRIVE_API_KEY }}
         run: npm run build
 
       - name: Assemble combined site
