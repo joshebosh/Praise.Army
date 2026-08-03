@@ -70,26 +70,6 @@ jobs:
           VITE_DRIVE_API_KEY: ${{ secrets.GOOGLE_DRIVE_API_KEY }}
         run: npm run build
 
-      - name: TEMP diagnose built bundle (no secret value printed)
-        working-directory: web
-        env:
-          VITE_DRIVE_API_KEY: ${{ secrets.GOOGLE_DRIVE_API_KEY }}
-        run: |
-          echo "--- does the built bundle contain exactly the secret value (byte for byte)? ---"
-          if grep -qF "$VITE_DRIVE_API_KEY" dist/assets/*.js; then
-            echo "MATCH: bundle contains the current GOOGLE_DRIVE_API_KEY secret verbatim"
-          else
-            echo "NO MATCH: bundle does NOT contain the current secret value at all"
-          fi
-          echo "--- key length as registered in secrets (sanity check only, not the value) ---"
-          echo -n "$VITE_DRIVE_API_KEY" | wc -c
-          echo "--- does the secret equal the value already exhaustively curl-tested (AIzaSyApXjVeedwUu6x_3LO-5-gprPRZw7D0Vvg)? ---"
-          if [ "$VITE_DRIVE_API_KEY" = "AIzaSyApXjVeedwUu6x_3LO-5-gprPRZw7D0Vvg" ]; then
-            echo "SAME: secret matches the key used in every prior curl reproduction"
-          else
-            echo "DIFFERENT: secret has changed since the curl tests -- that gap is the bug"
-          fi
-
       - name: Assemble combined site
         run: |
           mkdir -p site

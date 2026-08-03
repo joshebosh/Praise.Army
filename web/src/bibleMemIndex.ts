@@ -80,16 +80,46 @@ const DRIVE_API_KEY = import.meta.env.VITE_DRIVE_API_KEY;
 // Pages' response headers, a browser privacy setting -- unconfirmed which)
 // doesn't matter once it's forced here, since an explicit per-fetch
 // referrerPolicy overrides page/platform defaults.
+// Runs only when the main fetch below fails, to tell apart "Google is
+// unreachable from this browser/network at all" from "specifically the
+// custom-header, resourcekey-gated request is failing." Every attempt to
+// reproduce a real-browser failure server-side -- matching key, matching
+// referrer, matching per-file resourcekey, full Sec-Fetch-*/User-Agent
+// headers, even the CORS preflight OPTIONS itself -- has succeeded via
+// curl, which means the remaining suspects are things a data-center curl
+// process can't see: a TLS-inspecting corporate/ISP proxy, antivirus HTTPS
+// scanning, or DNS-level filtering on the *user's* path to Google that
+// mangles CORS response headers. This probe is a plain GET with no custom
+// headers at all (key as a `key=` query param instead), so the browser
+// never issues a CORS preflight for it -- if this also fails, the block is
+// happening before headers or resourcekeys even come into play.
+async function probeDriveReachability(): Promise<string> {
+  try {
+    const res = await fetch(`https://www.googleapis.com/drive/v3/about?fields=kind&key=${DRIVE_API_KEY}`);
+    const cors = res.headers.get("access-control-allow-origin") ?? "(none)";
+    return `probe: HTTP ${res.status}, access-control-allow-origin=${cors}`;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return `probe: ALSO failed (${message}) -- Google is unreachable from this browser/network, not just the audio request`;
+  }
+}
+
 export async function fetchDriveAudioBlobUrl(entry: VerseEntry): Promise<string> {
   const headers: HeadersInit = { "X-Goog-Api-Key": DRIVE_API_KEY };
   if (entry.resourceKey) {
     headers["X-Goog-Drive-Resource-Keys"] = `${entry.fileId}/${entry.resourceKey}`;
   }
   const url = `https://www.googleapis.com/drive/v3/files/${entry.fileId}?alt=media`;
-  const res = await fetch(url, { headers, referrerPolicy: "origin" });
-  if (!res.ok) {
-    throw new Error(`Drive fetch failed: ${res.status} ${res.statusText}`);
+  try {
+    const res = await fetch(url, { headers, referrerPolicy: "origin" });
+    if (!res.ok) {
+      throw new Error(`Drive fetch failed: ${res.status} ${res.statusText}`);
+    }
+    const blob = await res.blob();
+    return URL.createObjectURL(blob);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    const probe = await probeDriveReachability();
+    throw new Error(`${message} | ${probe}`);
   }
-  const blob = await res.blob();
-  return URL.createObjectURL(blob);
 }
