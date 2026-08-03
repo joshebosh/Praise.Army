@@ -43,7 +43,7 @@ jobs:
           node-version: 20
 
       - name: Export Bible audio index from Drive
-        if: github.event.inputs.refresh_index == 'true'
+        if: true # TEMPORARY: force one crawl to populate resourceKey data, then revert
         working-directory: scripts
         env:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
@@ -52,7 +52,7 @@ jobs:
           node export-bible-index.mjs
 
       - name: Commit refreshed index
-        if: github.event.inputs.refresh_index == 'true'
+        if: true # TEMPORARY: force one crawl to populate resourceKey data, then revert
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
