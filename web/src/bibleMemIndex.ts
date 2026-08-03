@@ -64,12 +64,21 @@ const DRIVE_API_KEY = import.meta.env.VITE_DRIVE_API_KEY;
 // proper CORS headers (verified: access-control-allow-origin scoped to our
 // referrer-restricted key), so a plain client-side fetch + blob works with
 // no server involved at all.
+//
+// The API key is passed via the X-Goog-Api-Key header, not a `key=` URL
+// query param, even though Google supports both -- confirmed in production
+// that some browser privacy/ad-blocking extensions strip `key=`-style query
+// params as a generic tracking-parameter heuristic, which silently drops
+// the key from the URL and gets a real 403 back from Google ("missing a
+// valid API key") that arrives without CORS headers, showing up client-side
+// as an opaque "blocked by CORS policy" error. The header form isn't a
+// target for that class of URL-cleaning tool.
 export async function fetchDriveAudioBlobUrl(entry: VerseEntry): Promise<string> {
-  const headers: HeadersInit = {};
+  const headers: HeadersInit = { "X-Goog-Api-Key": DRIVE_API_KEY };
   if (entry.resourceKey) {
     headers["X-Goog-Drive-Resource-Keys"] = `${entry.fileId}/${entry.resourceKey}`;
   }
-  const url = `https://www.googleapis.com/drive/v3/files/${entry.fileId}?alt=media&key=${DRIVE_API_KEY}`;
+  const url = `https://www.googleapis.com/drive/v3/files/${entry.fileId}?alt=media`;
   const res = await fetch(url, { headers });
   if (!res.ok) {
     throw new Error(`Drive fetch failed: ${res.status} ${res.statusText}`);
