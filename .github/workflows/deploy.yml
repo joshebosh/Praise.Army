@@ -70,6 +70,17 @@ jobs:
           VITE_DRIVE_API_KEY: ${{ secrets.GOOGLE_DRIVE_API_KEY }}
         run: npm run build
 
+      - name: TEMP diagnose built bundle (no secret value printed)
+        working-directory: web
+        run: |
+          echo "--- bundle files ---"
+          ls -la dist/assets/*.js
+          echo "--- does an API key literal (AIza...) appear anywhere in the bundle? ---"
+          echo "(if it matches the registered secret, GitHub auto-masks it to ***)"
+          grep -oE "AIza[0-9A-Za-z_-]{35}" dist/assets/*.js || echo "NO KEY LITERAL FOUND IN BUNDLE"
+          echo "--- literal 'undefined' near the header assignment (would mean env var didn't inject)? ---"
+          grep -oE ".{20}X-Goog-Api-Key.{40}" dist/assets/*.js || echo "PATTERN X-Goog-Api-Key NOT FOUND"
+
       - name: Assemble combined site
         run: |
           mkdir -p site
