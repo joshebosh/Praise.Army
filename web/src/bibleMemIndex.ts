@@ -66,20 +66,27 @@ const DRIVE_API_KEY = import.meta.env.VITE_DRIVE_API_KEY;
 // no server involved at all.
 //
 // The API key is passed via the X-Goog-Api-Key header, not a `key=` URL
-// query param, even though Google supports both -- confirmed in production
-// that some browser privacy/ad-blocking extensions strip `key=`-style query
-// params as a generic tracking-parameter heuristic, which silently drops
-// the key from the URL and gets a real 403 back from Google ("missing a
-// valid API key") that arrives without CORS headers, showing up client-side
-// as an opaque "blocked by CORS policy" error. The header form isn't a
-// target for that class of URL-cleaning tool.
+// query param, even though Google supports both -- some browser privacy/
+// ad-blocking extensions strip `key=`-style query params as a generic
+// tracking-parameter heuristic. The header form isn't a target for that.
+//
+// referrerPolicy is set explicitly because the key is HTTP-referrer
+// restricted (Google Cloud Console -> Application restrictions), and Google
+// rejects a request with no referrer at all with a 403 that -- like the
+// missing-key case -- arrives without CORS headers, so it shows up
+// client-side as an opaque "blocked by CORS policy" error rather than a
+// readable 403. Confirmed server-side: an empty referrer produces exactly
+// that response; whatever suppresses the referrer in production (GitHub
+// Pages' response headers, a browser privacy setting -- unconfirmed which)
+// doesn't matter once it's forced here, since an explicit per-fetch
+// referrerPolicy overrides page/platform defaults.
 export async function fetchDriveAudioBlobUrl(entry: VerseEntry): Promise<string> {
   const headers: HeadersInit = { "X-Goog-Api-Key": DRIVE_API_KEY };
   if (entry.resourceKey) {
     headers["X-Goog-Drive-Resource-Keys"] = `${entry.fileId}/${entry.resourceKey}`;
   }
   const url = `https://www.googleapis.com/drive/v3/files/${entry.fileId}?alt=media`;
-  const res = await fetch(url, { headers });
+  const res = await fetch(url, { headers, referrerPolicy: "origin" });
   if (!res.ok) {
     throw new Error(`Drive fetch failed: ${res.status} ${res.statusText}`);
   }
