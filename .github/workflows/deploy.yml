@@ -49,19 +49,19 @@ jobs:
         env:
           KEY: ${{ secrets.GOOGLE_DRIVE_API_KEY }}
         run: |
-          echo "--- metadata fetch, correct referrer + resourceKey header ---"
-          curl -sS -o /tmp/resp1.json -w "HTTP_STATUS=%{http_code}\n" \
-            -H "Referer: https://praise.army/biblemem/" \
-            -H "X-Goog-Drive-Resource-Keys: 0ByK9asbulrf_TzRDNEJNcE1QWlk/0-jzTWf9VAw5yrFFgcchnt6g" \
-            "https://www.googleapis.com/drive/v3/files/0ByK9asbulrf_TzRDNEJNcE1QWlk?fields=id,name,mimeType,size&key=${KEY}"
-          cat /tmp/resp1.json
-          echo ""
-          echo "--- CORS preflight (OPTIONS), same as the browser sends ---"
-          curl -sS -D - -o /dev/null -X OPTIONS \
-            -H "Origin: https://praise.army" \
-            -H "Access-Control-Request-Method: GET" \
-            -H "Access-Control-Request-Headers: x-goog-drive-resource-keys" \
-            "https://www.googleapis.com/drive/v3/files/0ByK9asbulrf_TzRDNEJNcE1QWlk?alt=media&key=${KEY}"
+          test_file() {
+            local label="$1" fileid="$2" rkey="$3"
+            echo "=== $label ($fileid) ==="
+            curl -sS -o /tmp/resp.json -w "HTTP_STATUS=%{http_code}\n" \
+              -H "Referer: https://praise.army/biblemem/" \
+              -H "X-Goog-Drive-Resource-Keys: ${fileid}/${rkey}" \
+              "https://www.googleapis.com/drive/v3/files/${fileid}?fields=id,name,mimeType,size&key=${KEY}"
+            cat /tmp/resp.json
+            echo ""
+          }
+          test_file "Genesis 1:1"   "0ByK9asbulrf_TzRDNEJNcE1QWlk" "0-jzTWf9VAw5yrFFgcchnt6g"
+          test_file "Matthew 1:2"   "0ByK9asbulrf_Q0Z3WUczcjRoZ00" "0-O9zmhI1IO0HW8YysxaH_Qg"
+          test_file "II Kings 1:2"  "0ByK9asbulrf_eFJrWWFzUUNWQWM" "0-5ZjyGj8VN6-a1RgPHLFOSw"
 
       - name: Export Bible audio index from Drive
         if: github.event.inputs.refresh_index == 'true'
