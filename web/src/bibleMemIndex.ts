@@ -44,13 +44,33 @@ export function sortedVerses(book: BookEntry, chapter: string): string[] {
   return Object.keys(book.chapters[chapter] || {}).sort((a, b) => Number(a) - Number(b));
 }
 
-// Direct client -> Google Drive stream. Uses the classic `uc?export=download`
-// endpoint (not the v3 REST API) because it accepts `resourcekey` as a plain
-// URL parameter -- the v3 API requires it as a request header, which a
-// plain <audio src="..."> element has no way to send. The resourcekey is
-// mandatory for anonymous access to this file (see VerseEntry.resourceKey).
-export function driveAudioUrl(entry: { fileId: string; resourceKey?: string }): string {
-  const params = new URLSearchParams({ export: "download", id: entry.fileId });
-  if (entry.resourceKey) params.set("resourcekey", entry.resourceKey);
-  return `https://drive.google.com/uc?${params.toString()}`;
+// Public, referrer-restricted key (Google Cloud Console -> APIs & Services
+// -> Credentials), restricted to: API = Google Drive API only,
+// Application = HTTP referrers -> https://praise.army/*. Same trust model
+// as the Firebase web config in firebase.ts -- not a secret, the
+// restrictions themselves are the security boundary.
+const DRIVE_API_KEY = "AIzaSyAlAMhsUTjpNC-a7BISCE4vhDfUSINMua0";
+
+// Fetches a verse's audio bytes and returns a local blob: URL for <audio
+// src>. Can't just point <audio src> at Drive directly: the v3 API requires
+// the resourcekey as a request header (X-Goog-Drive-Resource-Keys), and
+// <audio src> has no way to send custom headers -- confirmed by testing the
+// unofficial uc?export=download hotlink, which does NOT accept resourcekey
+// as a query param despite that being Google's documented pattern for
+// consumer share links. fetch() can set the header, and Drive's API sends
+// proper CORS headers (verified: access-control-allow-origin scoped to our
+// referrer-restricted key), so a plain client-side fetch + blob works with
+// no server involved at all.
+export async function fetchDriveAudioBlobUrl(entry: VerseEntry): Promise<string> {
+  const headers: HeadersInit = {};
+  if (entry.resourceKey) {
+    headers["X-Goog-Drive-Resource-Keys"] = `${entry.fileId}/${entry.resourceKey}`;
+  }
+  const url = `https://www.googleapis.com/drive/v3/files/${entry.fileId}?alt=media&key=${DRIVE_API_KEY}`;
+  const res = await fetch(url, { headers });
+  if (!res.ok) {
+    throw new Error(`Drive fetch failed: ${res.status} ${res.statusText}`);
+  }
+  const blob = await res.blob();
+  return URL.createObjectURL(blob);
 }

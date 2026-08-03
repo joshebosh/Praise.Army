@@ -311,6 +311,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     const doc = new DOMParser().parseFromString(template, 'text/html');
     document.documentElement.replaceWith(doc.documentElement);
 
+    // Re-add the BibleMem cross-link -- it lived in the pre-swap body, which
+    // this replaceWith just discarded.
+    {
+      const link = document.createElement('a');
+      link.href = '/biblemem/';
+      link.textContent = 'Bible Memorization →';
+      link.style.cssText = 'position:fixed;top:12px;right:12px;z-index:10001;font:13px/1.4 -apple-system,BlinkMacSystemFont,sans-serif;color:#fff;background:#556B2F;padding:8px 14px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.2);text-decoration:none;';
+      document.body.appendChild(link);
+    }
+
     // Resolve page-frame markers: mint this document's own blob for each
     // framed page — from local text when this is the root, otherwise by
     // asking the direct parent over the relay protocol above. An

@@ -5,12 +5,43 @@ import { getVerseText, loadBibleText } from "./bibleTextParser";
 import {
   type BibleMemIndex,
   type BookEntry,
-  driveAudioUrl,
+  type VerseEntry,
+  fetchDriveAudioBlobUrl,
   loadBibleMemIndex,
   sortedBooks,
   sortedChapters,
   sortedVerses,
 } from "./bibleMemIndex";
+
+interface QueueItem {
+  chapter: string;
+  verse: string;
+  entry: VerseEntry;
+}
+
+// Mirrors the original app's three playback scopes, inferred from how much
+// is selected: book+chapter+verse(-through) plays a range within one
+// chapter; book+chapter alone plays every verse in that chapter; book alone
+// plays the whole book in chapter/verse order. Built entirely from what the
+// index actually has audio for (no separate canonical book/chapter/verse
+// tables to fall out of sync with).
+function buildPlaybackQueue(book: BookEntry, chapter: string, verse: string, through: string): QueueItem[] {
+  const chaptersToPlay = chapter ? [chapter] : sortedChapters(book);
+  const queue: QueueItem[] = [];
+
+  for (const ch of chaptersToPlay) {
+    let verses = sortedVerses(book, ch);
+    if (chapter && verse) {
+      const start = parseInt(verse, 10);
+      const end = through ? parseInt(through, 10) : start;
+      verses = verses.filter((v) => Number(v) >= start && Number(v) <= end);
+    }
+    for (const v of verses) {
+      queue.push({ chapter: ch, verse: v, entry: book.chapters[ch][v] });
+    }
+  }
+  return queue;
+}
 import {
   type BibleMemPreset,
   deletePreset,
@@ -75,6 +106,7 @@ function BibleMem({ user }: { user: User }) {
   const [verseTexts, setVerseTexts] = useState<{ verse: number; text: string }[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentIteration, setCurrentIteration] = useState(0);
+  const [currentPlayingChapter, setCurrentPlayingChapter] = useState<string | null>(null);
   const [currentPlayingVerse, setCurrentPlayingVerse] = useState<number | null>(null);
   const [status, setStatus] = useState<string | null>(null);
 
@@ -83,6 +115,11 @@ function BibleMem({ user }: { user: User }) {
 
   const stopRef = useRef(false);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  // Keyed by "chapter:verse". Caches the in-flight/resolved fetch itself
+  // (not just the eventual Audio element) so calling loadAudio twice for the
+  // same slot -- once as "current", once earlier as a preloaded "next" --
+  // dedupes into a single network fetch instead of firing twice.
+  const audioCacheRef = useRef<Map<string, Promise<HTMLAudioElement>>>(new Map());
 
   useEffect(() => {
     loadBibleMemIndex().then(setIndex);
@@ -140,44 +177,114 @@ function BibleMem({ user }: { user: User }) {
     setVerseTexts([]);
   };
 
+  // Kicks off (or reuses) fetching+decoding a queue slot without blocking the
+  // caller -- calling this for the *next* item while the current one is
+  // still being awaited/played is how playback stays gapless instead of
+  // fetch-then-play-then-fetch for every single verse. Not awaiting the
+  // returned promise here is intentional (fire-and-forget preload).
+  const loadAudio = (key: string, entry: VerseEntry): Promise<HTMLAudioElement> => {
+    let promise = audioCacheRef.current.get(key);
+    if (!promise) {
+      promise = fetchDriveAudioBlobUrl(entry).then((blobUrl) => {
+        const audio = new Audio(blobUrl);
+        audio.preload = "auto";
+        return audio;
+      });
+      audioCacheRef.current.set(key, promise);
+    }
+    return promise;
+  };
+
+  // Blob URLs are already-downloaded local data, so this is just a
+  // near-instant decode-readiness check, not a network wait.
+  const waitUntilReady = (audio: HTMLAudioElement): Promise<boolean> => {
+    if (audio.readyState >= 3) return Promise.resolve(true); // HAVE_FUTURE_DATA+
+    return new Promise((resolve) => {
+      const cleanup = () => {
+        audio.removeEventListener("canplaythrough", onReady);
+        audio.removeEventListener("error", onError);
+      };
+      const onReady = () => {
+        cleanup();
+        resolve(true);
+      };
+      const onError = () => {
+        cleanup();
+        resolve(false);
+      };
+      audio.addEventListener("canplaythrough", onReady, { once: true });
+      audio.addEventListener("error", onError, { once: true });
+    });
+  };
+
+  const clearAudioCache = () => {
+    audioCacheRef.current.forEach((promise) => {
+      promise.then((audio) => URL.revokeObjectURL(audio.src)).catch(() => {});
+    });
+    audioCacheRef.current.clear();
+  };
+
   const handlePlay = async () => {
-    if (!book || !selectedChapter || !selectedVerse) return;
+    if (!book) return;
+    const queue = buildPlaybackQueue(book, selectedChapter, selectedVerse, throughVerse);
+    if (queue.length === 0) {
+      setStatus(`No audio available for ${selectedBook}${selectedChapter ? " " + selectedChapter : ""}`);
+      return;
+    }
+
     setIsPlaying(true);
     stopRef.current = false;
     setStatus(null);
+    clearAudioCache();
 
-    const startVerse = parseInt(selectedVerse, 10);
-    const endVerse = throughVerse ? parseInt(throughVerse, 10) : startVerse;
     const loops = parseInt(playLoops, 10);
+    const keyFor = (item: QueueItem) => `${item.chapter}:${item.verse}`;
+
+    loadAudio(keyFor(queue[0]), queue[0].entry);
 
     for (let i = 0; i < loops; i++) {
       if (stopRef.current) break;
       setCurrentIteration(i + 1);
 
-      for (let v = startVerse; v <= endVerse; v++) {
+      for (let qi = 0; qi < queue.length; qi++) {
         if (stopRef.current) break;
+        const item = queue[qi];
 
-        const verseData = book.chapters[selectedChapter]?.[String(v)];
-        if (!verseData) {
-          setStatus(`No audio for ${selectedBook} ${selectedChapter}:${v}`);
+        const next = queue[qi + 1];
+        if (next) loadAudio(keyFor(next), next.entry);
+
+        let audio: HTMLAudioElement;
+        try {
+          audio = await loadAudio(keyFor(item), item.entry);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err);
+          console.error(`[BibleMem] fetch failed for ${selectedBook} ${item.chapter}:${item.verse}`, message);
+          setStatus(`Audio fetch failed for ${selectedBook} ${item.chapter}:${item.verse}: ${message}`);
           continue;
         }
 
-        const audio = new Audio(driveAudioUrl(verseData));
+        const ready = await waitUntilReady(audio);
+        if (!ready) {
+          console.error(`[BibleMem] failed to load ${selectedBook} ${item.chapter}:${item.verse}`);
+          setStatus(`Audio failed to load for ${selectedBook} ${item.chapter}:${item.verse}`);
+          continue;
+        }
+
         currentAudioRef.current = audio;
-        setCurrentPlayingVerse(v);
+        setCurrentPlayingChapter(item.chapter);
+        setCurrentPlayingVerse(Number(item.verse));
 
         try {
+          audio.currentTime = 0;
           await audio.play();
           await new Promise<void>((resolve) => {
             audio.addEventListener("ended", () => resolve(), { once: true });
             audio.addEventListener(
               "error",
               () => {
-                const code = audio.error?.code;
                 const message = audio.error?.message || "unknown media error";
-                console.error(`[BibleMem] audio error for ${selectedBook} ${selectedChapter}:${v}`, code, message);
-                setStatus(`Audio error for ${selectedBook} ${selectedChapter}:${v}: ${message}`);
+                console.error(`[BibleMem] audio error for ${selectedBook} ${item.chapter}:${item.verse}`, message);
+                setStatus(`Audio error for ${selectedBook} ${item.chapter}:${item.verse}: ${message}`);
                 resolve();
               },
               { once: true },
@@ -186,8 +293,8 @@ function BibleMem({ user }: { user: User }) {
         } catch (err) {
           const name = err instanceof DOMException ? err.name : "Error";
           const message = err instanceof Error ? err.message : String(err);
-          console.error(`[BibleMem] play() failed for ${selectedBook} ${selectedChapter}:${v}`, name, message);
-          setStatus(`Playback failed for ${selectedBook} ${selectedChapter}:${v} (${name}: ${message})`);
+          console.error(`[BibleMem] play() failed for ${selectedBook} ${item.chapter}:${item.verse}`, name, message);
+          setStatus(`Playback failed for ${selectedBook} ${item.chapter}:${item.verse} (${name}: ${message})`);
         }
         currentAudioRef.current = null;
       }
@@ -195,6 +302,7 @@ function BibleMem({ user }: { user: User }) {
 
     setIsPlaying(false);
     setCurrentIteration(0);
+    setCurrentPlayingChapter(null);
     setCurrentPlayingVerse(null);
   };
 
@@ -204,7 +312,12 @@ function BibleMem({ user }: { user: User }) {
       currentAudioRef.current.pause();
       currentAudioRef.current = null;
     }
+    audioCacheRef.current.forEach((promise) => {
+      promise.then((audio) => audio.pause()).catch(() => {});
+    });
+    clearAudioCache();
     setIsPlaying(false);
+    setCurrentPlayingChapter(null);
     setCurrentPlayingVerse(null);
     setCurrentIteration(0);
   };
@@ -386,21 +499,29 @@ function BibleMem({ user }: { user: User }) {
         </div>
 
         <div className="controls-row">
-          <button
-            className="btn btn-play"
-            disabled={!selectedBook || !selectedChapter || !selectedVerse || isPlaying}
-            onClick={handlePlay}
-          >
+          <button className="btn btn-play" disabled={!selectedBook || isPlaying} onClick={handlePlay}>
             Play
           </button>
           <button className="btn btn-stop" disabled={!isPlaying} onClick={handleStop}>
             Stop
           </button>
         </div>
+        <p className="muted" style={{ padding: 0, textAlign: "left" }}>
+          {selectedChapter && selectedVerse
+            ? "Plays the selected verse range."
+            : selectedChapter
+              ? "No verse selected — plays the whole chapter."
+              : selectedBook
+                ? "No chapter selected — plays the whole book."
+                : ""}
+        </p>
 
         {isPlaying && (
           <div className="status-box">
             Playing: iteration {currentIteration} of {playLoops}
+            {currentPlayingChapter && currentPlayingVerse
+              ? ` — ${selectedBook} ${currentPlayingChapter}:${currentPlayingVerse}`
+              : ""}
           </div>
         )}
         {status && <div className="status-box warning">{status}</div>}
@@ -409,9 +530,11 @@ function BibleMem({ user }: { user: User }) {
       <div className="card">
         <div className="header-row">
           <h2>
-            {selectedBook && selectedChapter && selectedVerse
-              ? `${selectedBook} ${selectedChapter}:${selectedVerse}${throughVerse ? "-" + throughVerse : ""}`
-              : "Verse Text"}
+            {isPlaying && currentPlayingChapter && currentPlayingVerse
+              ? `${selectedBook} ${currentPlayingChapter}:${currentPlayingVerse}`
+              : selectedBook && selectedChapter && selectedVerse
+                ? `${selectedBook} ${selectedChapter}:${selectedVerse}${throughVerse ? "-" + throughVerse : ""}`
+                : "Verse Text"}
           </h2>
           <div className="font-controls">
             <button className="btn btn-outline" onClick={() => handleFontChange(-2)}>

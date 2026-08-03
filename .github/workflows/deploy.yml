@@ -1,16 +1,28 @@
 name: Deploy Praise Army (Songs + BibleMem)
 
 # One workflow, one artifact: the original songs page at "/" plus the
-# BibleMem app at "/biblemem/". Runs the Firestore export and the build in
-# the same job so the deployed audio index is never stale.
+# BibleMem app at "/biblemem/".
+#
+# The Drive audio index (web/public/data/bibleMemIndex.json) is checked
+# into git like normal data, NOT regenerated on every push -- the crawl
+# takes ~4 minutes (1,189 Drive folder listings) and the audio library
+# barely changes, so re-running it on every CSS tweak was pure waste.
+# Regenerate it manually: Actions tab -> "Run workflow" -> check
+# "Refresh Bible audio index".
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      refresh_index:
+        description: "Refresh Bible audio index (re-crawl Drive, ~4 min)"
+        required: false
+        type: boolean
+        default: false
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -30,13 +42,23 @@ jobs:
         with:
           node-version: 20
 
-      - name: Export Bible audio index from Firestore
+      - name: Export Bible audio index from Drive
+        if: github.event.inputs.refresh_index == 'true'
         working-directory: scripts
         env:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
         run: |
           npm install
           node export-bible-index.mjs
+
+      - name: Commit refreshed index
+        if: github.event.inputs.refresh_index == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add web/public/data/bibleMemIndex.json
+          git diff --cached --quiet && echo "No changes to commit" || git commit -m "Refresh Bible audio index"
+          git push
 
       - name: Install BibleMem dependencies
         working-directory: web
