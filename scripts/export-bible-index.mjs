@@ -110,6 +110,10 @@ async function main() {
     JSON.stringify(index, null, 2),
   );
   console.log(`Exported ${Object.keys(books).length} books, ${totalVerses} verses.`);
+
+  // TEMPORARY diagnostic -- remove once playback is confirmed working.
+  const genesis = Object.values(books).find((b) => b.bookName === "Genesis");
+  console.log("DEBUG Genesis 1:1 entry:", JSON.stringify(genesis?.chapters?.[1]?.[1]));
 }
 
 main().catch((err) => {
