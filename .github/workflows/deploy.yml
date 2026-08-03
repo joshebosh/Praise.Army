@@ -73,6 +73,7 @@ jobs:
           mkdir -p site
           cp index.html site/
           cp CNAME site/
+          cp favicon.ico site/
           mkdir -p site/biblemem
           cp -r web/dist/. site/biblemem/
 
