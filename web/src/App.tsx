@@ -105,6 +105,7 @@ function BibleMem({ user }: { user: User }) {
 
   const [verseTexts, setVerseTexts] = useState<{ verse: number; text: string }[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [currentIteration, setCurrentIteration] = useState(0);
   const [currentPlayingChapter, setCurrentPlayingChapter] = useState<string | null>(null);
   const [currentPlayingVerse, setCurrentPlayingVerse] = useState<number | null>(null);
@@ -233,6 +234,7 @@ function BibleMem({ user }: { user: User }) {
     }
 
     setIsPlaying(true);
+    setIsPaused(false);
     stopRef.current = false;
     setStatus(null);
     clearAudioCache();
@@ -310,6 +312,7 @@ function BibleMem({ user }: { user: User }) {
     }
 
     setIsPlaying(false);
+    setIsPaused(false);
     setCurrentIteration(0);
     setCurrentPlayingChapter(null);
     setCurrentPlayingVerse(null);
@@ -326,9 +329,22 @@ function BibleMem({ user }: { user: User }) {
     });
     clearAudioCache();
     setIsPlaying(false);
+    setIsPaused(false);
     setCurrentPlayingChapter(null);
     setCurrentPlayingVerse(null);
     setCurrentIteration(0);
+  };
+
+  const handlePauseResume = () => {
+    const audio = currentAudioRef.current;
+    if (!audio) return;
+    if (isPaused) {
+      audio.play();
+      setIsPaused(false);
+    } else {
+      audio.pause();
+      setIsPaused(true);
+    }
   };
 
   const handlePresetSelect = (id: string) => {
@@ -508,8 +524,12 @@ function BibleMem({ user }: { user: User }) {
         </div>
 
         <div className="controls-row">
-          <button className="btn btn-play" disabled={!selectedBook || isPlaying} onClick={handlePlay}>
-            Play
+          <button
+            className="btn btn-play"
+            disabled={!selectedBook}
+            onClick={isPlaying ? handlePauseResume : handlePlay}
+          >
+            {isPlaying ? (isPaused ? "Resume" : "Pause") : "Play"}
           </button>
           <button className="btn btn-stop" disabled={!isPlaying} onClick={handleStop}>
             Stop
