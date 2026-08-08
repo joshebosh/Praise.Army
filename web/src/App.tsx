@@ -339,6 +339,7 @@ function BibleMem({ user }: { user: User }) {
     const audio = currentAudioRef.current;
     if (!audio) return;
     if (isPaused) {
+      audio.currentTime = Math.max(0, audio.currentTime - 1);
       audio.play();
       setIsPaused(false);
     } else {
