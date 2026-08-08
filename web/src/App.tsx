@@ -255,6 +255,20 @@ function BibleMem({ user }: { user: User }) {
         const next = queue[qi + 1];
         if (next) loadAudio(keyFor(next), next.entry);
 
+        // Follow along: update the text display to the verse actually being
+        // attempted right now, not just whatever was in the picker when Play
+        // was clicked -- matters most for whole-chapter/whole-book playback,
+        // where the queue moves well past the initial selection. This runs
+        // before the audio fetch (not after success) so the text still
+        // advances through a long whole-book run even when individual
+        // verses' audio fails to fetch/load.
+        setCurrentPlayingChapter(item.chapter);
+        setCurrentPlayingVerse(Number(item.verse));
+        const liveText = getVerseText(selectedBook, Number(item.chapter), Number(item.verse));
+        if (liveText) {
+          setVerseTexts([{ verse: Number(item.verse), text: liveText }]);
+        }
+
         let audio: HTMLAudioElement;
         try {
           audio = await loadAudio(keyFor(item), item.entry);
@@ -273,17 +287,6 @@ function BibleMem({ user }: { user: User }) {
         }
 
         currentAudioRef.current = audio;
-        setCurrentPlayingChapter(item.chapter);
-        setCurrentPlayingVerse(Number(item.verse));
-
-        // Follow along: update the text display to the verse actually
-        // playing right now, not just whatever was in the picker when Play
-        // was clicked -- matters most for whole-chapter/whole-book playback,
-        // where the queue moves well past the initial selection.
-        const liveText = getVerseText(selectedBook, Number(item.chapter), Number(item.verse));
-        if (liveText) {
-          setVerseTexts([{ verse: Number(item.verse), text: liveText }]);
-        }
 
         try {
           audio.currentTime = 0;

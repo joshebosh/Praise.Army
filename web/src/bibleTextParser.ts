@@ -33,7 +33,19 @@ export async function loadBibleText(): Promise<void> {
   }
 }
 
+// bibleMemIndex.json names numbered books with Roman numerals ("I John",
+// "II Corinthians"); bible.txt (and this parser's key format) uses Arabic
+// numerals ("1 John", "2 Corinthians"). Normalize before lookup so those
+// books resolve instead of silently missing every verse.
+const ROMAN_BOOK_PREFIX: Record<string, string> = { I: "1", II: "2", III: "3" };
+
+function normalizeBookName(book: string): string {
+  const [first, ...rest] = book.split(" ");
+  const arabicPrefix = ROMAN_BOOK_PREFIX[first];
+  return arabicPrefix ? [arabicPrefix, ...rest].join(" ") : book;
+}
+
 export function getVerseText(book: string, chapter: number, verse: number): string | null {
   if (!bibleVerses) return null;
-  return bibleVerses.get(`${book}|${chapter}|${verse}`) || null;
+  return bibleVerses.get(`${normalizeBookName(book)}|${chapter}|${verse}`) || null;
 }
