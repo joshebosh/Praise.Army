@@ -51,6 +51,7 @@ import {
   subscribeToPresets,
 } from "./presetStore";
 import Knowledge from "./Knowledge";
+import Nav from "./Nav";
 
 const DEFAULT_FONT_SIZE = 18;
 
@@ -417,12 +418,7 @@ function BibleMem({ user }: { user: User }) {
         <div className="header-row">
           <h1>Bible Memorization Tool</h1>
           <div className="controls-row" style={{ marginBottom: 0 }}>
-            <a href="/" className="btn btn-outline">
-              &larr; Songs
-            </a>
-            <a href="#knowledge" className="btn btn-outline">
-              Knowledge
-            </a>
+            <Nav />
             <button className="btn btn-outline" onClick={() => signOut(firebaseAuth)}>
               Sign out
             </button>

@@ -10,6 +10,7 @@ import {
   updateKnowledgeItem,
   uploadMultipleFiles,
 } from "./knowledgeStore";
+import Nav from "./Nav";
 
 const TYPE_LABEL: Record<KnowledgeType, string> = {
   link: "Link",
@@ -148,9 +149,7 @@ export default function Knowledge({ user: _user }: { user: User }) {
         <div className="header-row">
           <h1>Knowledge Library</h1>
           <div className="controls-row" style={{ marginBottom: 0 }}>
-            <a href="#" className="btn btn-outline">
-              &larr; BibleMem
-            </a>
+            <Nav />
           </div>
         </div>
         <p className="subtitle">Emergency access to reference docs, links, images, and notes.</p>
