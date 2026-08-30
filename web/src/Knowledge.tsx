@@ -200,9 +200,7 @@ export default function Knowledge({ user: _user }: { user: User }) {
                   {item.type === "png" ? <img src={item.url} alt={item.title} /> : TYPE_LABEL[item.type][0]}
                 </div>
                 <div className="knowledge-info">
-                  <div className="knowledge-title" title={item.title}>
-                    {item.title}
-                  </div>
+                  <div className="knowledge-title">{item.title}</div>
                   <div className="knowledge-meta">{item.description || TYPE_LABEL[item.type]}</div>
                 </div>
                 <div className="knowledge-actions">

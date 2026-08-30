@@ -195,19 +195,20 @@ button:disabled {
 }
 
 .knowledge-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-  gap: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
 }
 
 .knowledge-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.5rem;
+  padding: 0.6rem 0.75rem;
   border-radius: 0.5rem;
   border: 1px solid #eee;
   cursor: pointer;
+  width: 100%;
 }
 
 .knowledge-item:hover {
@@ -250,14 +251,15 @@ button:disabled {
 .knowledge-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .knowledge-title {
   font-weight: 600;
-  font-size: 0.9rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 1rem;
 }
 
 .knowledge-meta {
