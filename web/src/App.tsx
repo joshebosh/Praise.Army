@@ -600,20 +600,12 @@ function BibleMem({ user }: { user: User }) {
   );
 }
 
-function useHashPage(): "biblemem" | "knowledge" {
-  const [page, setPage] = useState<"biblemem" | "knowledge">(
-    window.location.hash === "#knowledge" ? "knowledge" : "biblemem",
-  );
-  useEffect(() => {
-    const onHashChange = () => setPage(window.location.hash === "#knowledge" ? "knowledge" : "biblemem");
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
-  }, []);
-  return page;
-}
+// This bundle is deployed verbatim to both /knowledge/ and /biblemem/ (see
+// vite.config.ts), so which page to show is determined by which directory
+// served this index.html, not by app-internal routing.
+const page: "biblemem" | "knowledge" = window.location.pathname.startsWith("/knowledge") ? "knowledge" : "biblemem";
 
 export default function App() {
-  const page = useHashPage();
   return (
     <SignInGate>
       {(user) => (page === "knowledge" ? <Knowledge user={user} /> : <BibleMem user={user} />)}

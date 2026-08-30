@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 
 const PAGES = [
   { href: "/", label: "Songs" },
-  { href: "#", label: "Bible Memorization" },
-  { href: "#knowledge", label: "Knowledge Library" },
+  { href: "/biblemem/", label: "Bible Memorization" },
+  { href: "/knowledge/", label: "Knowledge Library" },
 ];
 
 export default function Nav() {

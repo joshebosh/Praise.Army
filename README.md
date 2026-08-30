@@ -1,14 +1,18 @@
 # Praise.Army — Emergency Access Page
 
-Static site serving two things at the same domain:
+Static site serving three top-level pages at the same domain, all cross-linked via a
+"Pages" dropdown:
 
 - **`/`** — the original songs page, untouched.
 - **`/biblemem/`** — a static port of the BibleMem Bible Memorization tool from
   joshua.tel/praise-army, meant to keep working even if the main Vultr/Proxmox servers are down.
-  Includes a second in-app page, **Knowledge Library** (`/biblemem/#knowledge`, linked from the
-  BibleMem header) — a static port of `praise-army/frontend/src/pages/Knowledge.tsx`. Switches
-  via a hash flag rather than a real route, since the whole app is one Vite build deployed under
-  a single `/biblemem/` path.
+- **`/knowledge/`** — a static port of `praise-army/frontend/src/pages/Knowledge.tsx`
+  (the Knowledge Library). Same purpose: keeps working when the main servers are down.
+
+`/biblemem/` and `/knowledge/` are the *exact same* Vite build (`web/dist`), deployed to two
+directories in the CI workflow. `App.tsx` picks which page to render by checking
+`window.location.pathname` at load, not by an in-app route — each is a real top-level URL, not
+a hash flag under the other.
 
 No backend, no live proxy, no server-held secrets at request time:
 
