@@ -5,12 +5,29 @@ Static site serving two things at the same domain:
 - **`/`** — the original songs page, untouched.
 - **`/biblemem/`** — a static port of the BibleMem Bible Memorization tool from
   joshua.tel/praise-army, meant to keep working even if the main Vultr/Proxmox servers are down.
+  Includes a second in-app page, **Knowledge Library** (`/biblemem/#knowledge`, linked from the
+  BibleMem header) — a static port of `praise-army/frontend/src/pages/Knowledge.tsx`. Switches
+  via a hash flag rather than a real route, since the whole app is one Vite build deployed under
+  a single `/biblemem/` path.
 
 No backend, no live proxy, no server-held secrets at request time:
 
 - **Verse text** — bundled `web/public/data/bible.txt`, parsed client-side.
 - **Sign-in / presets / font size** — direct Firebase client SDK calls (Auth + Firestore),
   same project (`praisearmy-firebase`) and same security rules as the main app.
+- **Knowledge Library items** — direct Firestore/Storage client calls
+  (`web/src/knowledgeStore.ts`), same pattern as presets. **Requires a Firestore rule that
+  doesn't exist yet**: the original `Knowledge.tsx` reads/writes the `knowledge_items`
+  collection only through the main app's FastAPI backend, which uses the Firebase Admin SDK and
+  so bypasses client security rules entirely. Until an authenticated read/write rule is added
+  for `/knowledge_items/{itemId}` (and Storage path `knowledge/**`) in the Firebase console,
+  this page will get permission-denied on every read/write. Add, e.g.:
+  ```
+  match /knowledge_items/{itemId} {
+    allow read, write: if request.auth != null;
+  }
+  ```
+  and update `joshua.tel/FIREBASE.md`'s rules section to match.
 - **Audio** — fetched directly from the Google Drive API in the browser (`fetch()` + `Blob` +
   `URL.createObjectURL`, not `<audio src>` directly — Drive requires a per-file resourcekey
   header, which `<audio src>` can't send) using a static `web/public/data/bibleMemIndex.json`

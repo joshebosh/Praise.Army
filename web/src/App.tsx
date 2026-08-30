@@ -50,6 +50,7 @@ import {
   saveFontSize,
   subscribeToPresets,
 } from "./presetStore";
+import Knowledge from "./Knowledge";
 
 const DEFAULT_FONT_SIZE = 18;
 
@@ -419,6 +420,9 @@ function BibleMem({ user }: { user: User }) {
             <a href="/" className="btn btn-outline">
               &larr; Songs
             </a>
+            <a href="#knowledge" className="btn btn-outline">
+              Knowledge
+            </a>
             <button className="btn btn-outline" onClick={() => signOut(firebaseAuth)}>
               Sign out
             </button>
@@ -600,6 +604,23 @@ function BibleMem({ user }: { user: User }) {
   );
 }
 
+function useHashPage(): "biblemem" | "knowledge" {
+  const [page, setPage] = useState<"biblemem" | "knowledge">(
+    window.location.hash === "#knowledge" ? "knowledge" : "biblemem",
+  );
+  useEffect(() => {
+    const onHashChange = () => setPage(window.location.hash === "#knowledge" ? "knowledge" : "biblemem");
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+  return page;
+}
+
 export default function App() {
-  return <SignInGate>{(user) => <BibleMem user={user} />}</SignInGate>;
+  const page = useHashPage();
+  return (
+    <SignInGate>
+      {(user) => (page === "knowledge" ? <Knowledge user={user} /> : <BibleMem user={user} />)}
+    </SignInGate>
+  );
 }
