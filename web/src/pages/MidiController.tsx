@@ -803,36 +803,53 @@ const MidiController: React.FC = () => {
   const renderGrid = (startIdx: number, endIdx: number) => {
     const gridButtons = buttons.slice(startIdx, endIdx);
     return (
-      <div className="grid grid-cols-8 gap-[0.3%] w-full h-full">
+      <div style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(8, 1fr)",
+        gap: "0.3%",
+        width: "100%",
+        height: "100%",
+      }}>
         {gridButtons.map((button) => (
           <button
             key={button.id}
             onMouseDown={() => handleMouseDown(button.id)}
             onMouseUp={() => handleMouseUp(button.id)}
             onMouseLeave={() => handleMouseLeave(button.id)}
-            className={`
-              ${getButtonColor(button).className}
-              rounded-md text-xs font-bold
-              hover:brightness-110 transition-all duration-100
-              flex items-center justify-center p-1
-              shadow-md whitespace-pre-line leading-tight
-              select-none cursor-pointer
-              w-full h-full aspect-square
-              ${button.mode === "0x0" ? "active:scale-95" : ""}
-              relative
-            `}
             style={{
-              fontSize: "clamp(0.25rem, 1vw, 1.25rem)",
               ...getButtonColor(button).style,
+              fontSize: "clamp(0.25rem, 1vw, 1.25rem)",
+              borderRadius: "0.375rem",
+              fontWeight: "bold",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "0.25rem",
+              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+              whiteSpace: "pre-line",
+              lineHeight: "tight",
+              userSelect: "none",
+              width: "100%",
+              height: "100%",
+              aspectRatio: "1",
+              position: "relative",
+              border: "none",
+              transition: "all 100ms",
             }}
+            className={button.mode === "0x0" ? "active:scale-95" : ""}
             title={`MIDI: ${button.midi}\nMode: ${getModeLabel(
               button.mode,
             )}${button.group ? `\nGroup: ${button.group}` : ""}${button.group === 2 && button.subState !== undefined ? `\nSubState: ${button.subState}` : ""}`}
           >
             {button.ref !== undefined && (
               <span
-                className="absolute left-1 top-0"
-                style={{ fontSize: "clamp(0.1rem, 0.7vw, 0.6rem)" }}
+                style={{
+                  position: "absolute",
+                  left: "0.25rem",
+                  top: "0",
+                  fontSize: "clamp(0.1rem, 0.7vw, 0.6rem)",
+                }}
               >
                 {button.ref}
               </span>
