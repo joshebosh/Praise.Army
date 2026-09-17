@@ -803,7 +803,16 @@ const MidiController: React.FC = () => {
   const renderGrid = (startIdx: number, endIdx: number) => {
     const gridButtons = buttons.slice(startIdx, endIdx);
     return (
-      <div className="grid grid-cols-8 gap-[0.3%] w-full h-full">
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(8, 1fr)",
+          gridTemplateRows: "repeat(8, 1fr)",
+          gap: "2px",
+          width: "100%",
+          height: "100%",
+        }}
+      >
         {gridButtons.map((button) => (
           <button
             key={button.id}
@@ -817,12 +826,15 @@ const MidiController: React.FC = () => {
               flex items-center justify-center p-1
               shadow-md whitespace-pre-line leading-tight
               select-none cursor-pointer
-              w-full h-full aspect-square
               ${button.mode === "0x0" ? "active:scale-95" : ""}
               relative
             `}
             style={{
               fontSize: "clamp(0.25rem, 1vw, 1.25rem)",
+              width: "100%",
+              height: "100%",
+              minWidth: 0,
+              minHeight: 0,
               ...getButtonColor(button).style,
             }}
             title={`MIDI: ${button.midi}\nMode: ${getModeLabel(
@@ -857,19 +869,19 @@ const MidiController: React.FC = () => {
   };
 
   return (
-    <div className="w-screen h-screen flex flex-col">
+    <div className="w-screen h-screen flex flex-col" style={{ overflow: "hidden" }}>
       {/* Header with Nav */}
       <div style={{ backgroundColor: "#fff", borderBottom: "1px solid #ccc", padding: "0.5rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
         <h1 style={{ margin: 0, color: "#556b2f", fontSize: "1.1rem" }}>MIDI Controller</h1>
         <Nav />
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-1 min-h-0">
-        <div className="midi-grid w-full h-full">
+      <div className="flex-1 flex items-center justify-center p-1 min-h-0" style={{ overflow: "hidden" }}>
+        <div className="midi-grid w-full h-full" style={{ overflow: "hidden" }}>
           {/* Grid A */}
-          <div className="w-full h-full">{renderGrid(0, 64)}</div>
+          <div className="w-full h-full" style={{ overflow: "hidden" }}>{renderGrid(0, 64)}</div>
           {/* Grid B */}
-          <div className="w-full h-full">{renderGrid(64, 128)}</div>
+          <div className="w-full h-full" style={{ overflow: "hidden" }}>{renderGrid(64, 128)}</div>
         </div>
       </div>
 
