@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 :root {
   --olive-drab: #556b2f;
   --olive-drab-dark: #35421d;

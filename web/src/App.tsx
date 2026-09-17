@@ -52,6 +52,7 @@ import {
 } from "./presetStore";
 import Knowledge from "./Knowledge";
 import Nav from "./Nav";
+import MidiController from "./pages/MidiController";
 
 const DEFAULT_FONT_SIZE = 18;
 
@@ -600,15 +601,26 @@ function BibleMem({ user }: { user: User }) {
   );
 }
 
-// This bundle is deployed verbatim to both /knowledge/ and /biblemem/ (see
-// vite.config.ts), so which page to show is determined by which directory
-// served this index.html, not by app-internal routing.
-const page: "biblemem" | "knowledge" = window.location.pathname.startsWith("/knowledge") ? "knowledge" : "biblemem";
+// This bundle is deployed verbatim to multiple paths (see vite.config.ts),
+// so which page to show is determined by which directory served this index.html.
+const page: "biblemem" | "knowledge" | "midi" = window.location.pathname.startsWith("/knowledge")
+  ? "knowledge"
+  : window.location.pathname.startsWith("/midi")
+    ? "midi"
+    : "biblemem";
 
 export default function App() {
   return (
     <SignInGate>
-      {(user) => (page === "knowledge" ? <Knowledge user={user} /> : <BibleMem user={user} />)}
+      {(user) =>
+        page === "knowledge" ? (
+          <Knowledge user={user} />
+        ) : page === "midi" ? (
+          <MidiController />
+        ) : (
+          <BibleMem user={user} />
+        )
+      }
     </SignInGate>
   );
 }

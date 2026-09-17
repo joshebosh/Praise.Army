@@ -4,6 +4,7 @@ const PAGES = [
   { href: "/", label: "Songs" },
   { href: "/biblemem/", label: "Bible Memorization" },
   { href: "/knowledge/", label: "Knowledge Library" },
+  { href: "/midi/", label: "MIDI Controller" },
 ];
 
 export default function Nav() {
