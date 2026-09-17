@@ -1,8 +1,8 @@
-name: Deploy Praise Army (Songs + BibleMem + Knowledge)
+name: Deploy Praise Army (Songs + BibleMem + Knowledge + MIDI)
 
 # One workflow, one artifact: the original songs page at "/", plus the same
-# BibleMem/Knowledge bundle deployed twice as top-level paths "/biblemem/"
-# and "/knowledge/".
+# BibleMem/Knowledge/MIDI bundle deployed three times as top-level paths "/biblemem/",
+# "/knowledge/", and "/midi/".
 #
 # The Drive audio index (web/public/data/bibleMemIndex.json) is checked
 # into git like normal data, NOT regenerated on every push -- the crawl
@@ -77,11 +77,12 @@ jobs:
           cp index.html site/
           cp CNAME site/
           cp favicon.ico site/
-          # Same bundle deployed twice -- App.tsx picks BibleMem vs. Knowledge
+          # Same bundle deployed three times -- App.tsx picks BibleMem, Knowledge, or MIDI
           # based on which directory served it (window.location.pathname).
-          mkdir -p site/biblemem site/knowledge
+          mkdir -p site/biblemem site/knowledge site/midi
           cp -r web/dist/. site/biblemem/
           cp -r web/dist/. site/knowledge/
+          cp -r web/dist/. site/midi/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
