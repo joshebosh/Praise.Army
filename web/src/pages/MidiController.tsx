@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PianoSubmenu from "../components/PianoSubmenu";
 import SongJumpMenu from "../components/SongJumpMenu";
-import Nav from "../Nav";
 import { API_URL, mode as appMode, Mode } from "app";
 import useMidiControlModeStore from "utils/useMidiControlModeStore";
 
@@ -420,7 +419,7 @@ const MidiController: React.FC = () => {
         midi: data.midi,
         group: (data as any).group,
         subState: (data as any).subState ?? 0,
-        ref: (data as any).ref,
+        ref: data.ref,
       });
     });
 
@@ -803,53 +802,36 @@ const MidiController: React.FC = () => {
   const renderGrid = (startIdx: number, endIdx: number) => {
     const gridButtons = buttons.slice(startIdx, endIdx);
     return (
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(8, 1fr)",
-        gap: "0.3%",
-        width: "100%",
-        height: "100%",
-      }}>
+      <div className="grid grid-cols-8 gap-[0.3%] w-full h-full">
         {gridButtons.map((button) => (
           <button
             key={button.id}
             onMouseDown={() => handleMouseDown(button.id)}
             onMouseUp={() => handleMouseUp(button.id)}
             onMouseLeave={() => handleMouseLeave(button.id)}
+            className={`
+              ${getButtonColor(button).className}
+              rounded-md text-xs font-bold
+              hover:brightness-110 transition-all duration-100
+              flex items-center justify-center p-1
+              shadow-md whitespace-pre-line leading-tight
+              select-none cursor-pointer
+              w-full h-full aspect-square
+              ${button.mode === "0x0" ? "active:scale-95" : ""}
+              relative
+            `}
             style={{
-              ...getButtonColor(button).style,
               fontSize: "clamp(0.25rem, 1vw, 1.25rem)",
-              borderRadius: "0.375rem",
-              fontWeight: "bold",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: "0.25rem",
-              boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-              whiteSpace: "pre-line",
-              lineHeight: "tight",
-              userSelect: "none",
-              width: "100%",
-              height: "100%",
-              aspectRatio: "1",
-              position: "relative",
-              border: "none",
-              transition: "all 100ms",
+              ...getButtonColor(button).style,
             }}
-            className={button.mode === "0x0" ? "active:scale-95" : ""}
             title={`MIDI: ${button.midi}\nMode: ${getModeLabel(
               button.mode,
             )}${button.group ? `\nGroup: ${button.group}` : ""}${button.group === 2 && button.subState !== undefined ? `\nSubState: ${button.subState}` : ""}`}
           >
             {button.ref !== undefined && (
               <span
-                style={{
-                  position: "absolute",
-                  left: "0.25rem",
-                  top: "0",
-                  fontSize: "clamp(0.1rem, 0.7vw, 0.6rem)",
-                }}
+                className="absolute left-1 top-0"
+                style={{ fontSize: "clamp(0.1rem, 0.7vw, 0.6rem)" }}
               >
                 {button.ref}
               </span>
@@ -874,31 +856,15 @@ const MidiController: React.FC = () => {
   };
 
   return (
-    <div style={{ width: "100vw", height: "100vh", display: "flex", flexDirection: "column" }}>
-      {/* Header with Nav */}
-      <div style={{ backgroundColor: "#fff", borderBottom: "1px solid #ccc", padding: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <h1 style={{ margin: 0, color: "#556b2f" }}>MIDI Controller</h1>
-        <Nav />
-      </div>
-
-      {/* Main grid container - full remaining height */}
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "0.25rem" }}>
+    <div className="w-screen h-screen flex items-center justify-center p-1">
+      <div className="w-full h-full flex items-center justify-center">
         <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "0.5%",
-            width: "100%",
-            height: "100%",
-            maxWidth: `calc(100vh*2-2rem)`,
-            maxHeight: `calc(100% - 4rem)`,
-            aspectRatio: "2/1",
-          }}
+          className="grid grid-cols-2 gap-[0.5%] w-full max-w-[calc(100vh*2-2rem)] max-h-[calc(50vw-1rem)] aspect-[2/1]"
         >
           {/* Left 8x8 Grid */}
-          <div style={{ width: "100%", height: "100%" }}>{renderGrid(0, 64)}</div>
+          <div className="w-full h-full">{renderGrid(0, 64)}</div>
           {/* Right 8x8 Grid */}
-          <div style={{ width: "100%", height: "100%" }}>{renderGrid(64, 128)}</div>
+          <div className="w-full h-full">{renderGrid(64, 128)}</div>
         </div>
       </div>
 

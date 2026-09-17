@@ -10,15 +10,12 @@ interface MidiControlModeState {
   initializeMode: () => Promise<void>;
 }
 
-// Simple in-memory store for MIDI control mode (defaults to 'midi')
-// Can be extended to use Firebase or localStorage later
 const useMidiControlModeStore = create<MidiControlModeState>((set) => ({
   mode: 'midi',
   isLoading: false,
   error: null,
 
   initializeMode: async () => {
-    // Check localStorage for saved mode
     try {
       const saved = localStorage.getItem('midiControlMode');
       if (saved === 'api' || saved === 'midi') {
@@ -29,8 +26,6 @@ const useMidiControlModeStore = create<MidiControlModeState>((set) => ({
     } catch (e) {
       console.warn('[MidiControlMode] Could not read localStorage');
     }
-    
-    // Default to 'midi' mode
     set({ mode: 'midi', isLoading: false, error: null });
     console.log(`[MidiControlMode] Initialized with default: midi`);
   },
