@@ -48,7 +48,6 @@ const PianoSubmenu: React.FC<PianoSubmenuProps> = ({ onClose, onKeyPress }) => {
   };
 
   const whiteKeys = keys.filter(k => k.type === 'white');
-  const blackKeys = keys.filter(k => k.type === 'black');
 
   return (
     <div

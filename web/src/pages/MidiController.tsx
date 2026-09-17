@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import PianoSubmenu from "../components/PianoSubmenu";
 import SongJumpMenu from "../components/SongJumpMenu";
 import { API_URL, mode as appMode, Mode } from "app";
@@ -77,7 +77,6 @@ const MidiController: React.FC = () => {
   const [pianoSubmenuOpen, setPianoSubmenuOpen] = useState(false);
   const [songJumpMenuOpen, setSongJumpMenuOpen] = useState(false);
   const [medleySongs, setMedleySongs] = useState<any[]>([]);
-  const [isLoadingMedley, setIsLoadingMedley] = useState(false);
 
   // Initialize MIDI control mode from Firebase on mount
   useEffect(() => {
@@ -148,7 +147,6 @@ const MidiController: React.FC = () => {
 
   const handleSongJumpClick = async () => {
     // Always refresh medley data from MobileBroadcaster to ensure sync
-    setIsLoadingMedley(true);
     try {
       const baseUrl = appMode === Mode.PROD ? `${window.location.origin}/api` : API_URL;
       const response = await fetch(`${baseUrl}/broadcast-state`);
@@ -166,8 +164,6 @@ const MidiController: React.FC = () => {
     } catch (error) {
       console.error("[SONG JUMP] Error fetching medley data:", error);
       setMedleySongs([]);
-    } finally {
-      setIsLoadingMedley(false);
     }
     
     setSongJumpMenuOpen(true);
@@ -421,9 +417,9 @@ const MidiController: React.FC = () => {
         label: data.label,
         mode: data.mode,
         midi: data.midi,
-        group: data.group,
-        subState: data.subState ?? 0,
-        ref: data.ref,
+        group: (data as any).group,
+        subState: (data as any).subState ?? 0,
+        ref: (data as any).ref,
       });
     });
 

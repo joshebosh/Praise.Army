@@ -18,7 +18,8 @@
     "baseUrl": ".",
     "paths": {
       "app": ["./src/app.ts"],
-      "utils/*": ["./src/utils/*"]
+      "utils/*": ["./src/utils/*"],
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src"]
