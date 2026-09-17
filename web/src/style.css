@@ -12,6 +12,32 @@
   box-sizing: border-box;
 }
 
+/* Two 8x8 MIDI grids: side-by-side in landscape, stacked in portrait */
+.midi-grid {
+  display: grid;
+  gap: 0.5%;
+}
+
+@media (orientation: landscape) {
+  .midi-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr;
+    max-width: calc(100vh * 2 - 2rem);
+    max-height: calc(50vw - 1rem);
+    aspect-ratio: 2 / 1;
+  }
+}
+
+@media (orientation: portrait) {
+  .midi-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+    max-width: calc(50vh - 1rem);
+    max-height: calc(100vw * 2 - 2rem);
+    aspect-ratio: 1 / 2;
+  }
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
