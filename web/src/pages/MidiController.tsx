@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PianoSubmenu from "../components/PianoSubmenu";
 import SongJumpMenu from "../components/SongJumpMenu";
+import Nav from "../Nav";
 import { API_URL, mode as appMode, Mode } from "app";
 import useMidiControlModeStore from "utils/useMidiControlModeStore";
 
@@ -856,15 +857,31 @@ const MidiController: React.FC = () => {
   };
 
   return (
-    <div className="w-screen h-screen flex items-center justify-center p-1">
-      <div className="w-full h-full flex items-center justify-center">
+    <div style={{ width: "100vw", height: "100vh", display: "flex", flexDirection: "column" }}>
+      {/* Header with Nav */}
+      <div style={{ backgroundColor: "#fff", borderBottom: "1px solid #ccc", padding: "1rem", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1 style={{ margin: 0, color: "#556b2f" }}>MIDI Controller</h1>
+        <Nav />
+      </div>
+
+      {/* Main grid container - full remaining height */}
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "0.25rem" }}>
         <div
-          className="grid grid-cols-2 gap-[0.5%] w-full max-w-[calc(100vh*2-2rem)] max-h-[calc(50vw-1rem)] aspect-[2/1]"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "0.5%",
+            width: "100%",
+            height: "100%",
+            maxWidth: `calc(100vh*2-2rem)`,
+            maxHeight: `calc(100% - 4rem)`,
+            aspectRatio: "2/1",
+          }}
         >
           {/* Left 8x8 Grid */}
-          <div className="w-full h-full">{renderGrid(0, 64)}</div>
+          <div style={{ width: "100%", height: "100%" }}>{renderGrid(0, 64)}</div>
           {/* Right 8x8 Grid */}
-          <div className="w-full h-full">{renderGrid(64, 128)}</div>
+          <div style={{ width: "100%", height: "100%" }}>{renderGrid(64, 128)}</div>
         </div>
       </div>
 
