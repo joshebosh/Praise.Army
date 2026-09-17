@@ -78,10 +78,45 @@ const MidiController: React.FC = () => {
   const [pianoSubmenuOpen, setPianoSubmenuOpen] = useState(false);
   const [songJumpMenuOpen, setSongJumpMenuOpen] = useState(false);
   const [medleySongs, setMedleySongs] = useState<any[]>([]);
+  const [midiPortStatus, setMidiPortStatus] = useState<"checking" | "connected" | "not-found" | "unsupported" | "denied">("checking");
 
   // Initialize MIDI control mode from Firebase on mount
   useEffect(() => {
     initializeMidiMode();
+  }, []);
+
+  // Detect whether the LMP_TAB MIDI output port is actually available
+  useEffect(() => {
+    if (!navigator.requestMIDIAccess) {
+      setMidiPortStatus("unsupported");
+      return;
+    }
+
+    let access: any = null;
+
+    const checkPort = (a: any) => {
+      let found = false;
+      for (const output of a.outputs.values()) {
+        if (output.name === "LMP_TAB") {
+          found = true;
+          break;
+        }
+      }
+      setMidiPortStatus(found ? "connected" : "not-found");
+    };
+
+    navigator
+      .requestMIDIAccess({ sysex: false })
+      .then((a) => {
+        access = a;
+        checkPort(a);
+        a.onstatechange = () => checkPort(a);
+      })
+      .catch(() => setMidiPortStatus("denied"));
+
+    return () => {
+      if (access) access.onstatechange = null;
+    };
   }, []);
 
   const sendMIDI = async (midiString: string) => {
@@ -830,7 +865,7 @@ const MidiController: React.FC = () => {
               relative
             `}
             style={{
-              fontSize: "clamp(0.25rem, 1vw, 1.25rem)",
+              fontSize: "clamp(0.75rem, 3.2vw, 2rem)",
               width: "100%",
               height: "100%",
               minWidth: 0,
@@ -844,7 +879,7 @@ const MidiController: React.FC = () => {
             {button.ref !== undefined && (
               <span
                 className="absolute left-1 top-0"
-                style={{ fontSize: "clamp(0.1rem, 0.7vw, 0.6rem)" }}
+                style={{ fontSize: "clamp(0.45rem, 1.3vw, 0.9rem)" }}
               >
                 {button.ref}
               </span>
@@ -871,8 +906,29 @@ const MidiController: React.FC = () => {
   return (
     <div className="w-screen h-screen flex flex-col" style={{ overflow: "hidden" }}>
       {/* Header with Nav */}
-      <div style={{ backgroundColor: "#fff", borderBottom: "1px solid #ccc", padding: "0.5rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0 }}>
+      <div style={{ backgroundColor: "#fff", borderBottom: "1px solid #ccc", padding: "0.5rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, gap: "0.75rem" }}>
         <h1 style={{ margin: 0, color: "#556b2f", fontSize: "1.1rem" }}>MIDI Controller</h1>
+        <div
+          style={{
+            fontSize: "0.75rem",
+            fontWeight: "bold",
+            padding: "0.15rem 0.6rem",
+            borderRadius: "999px",
+            color: "#fff",
+            backgroundColor:
+              midiPortStatus === "connected" ? "#2e7d32" :
+              midiPortStatus === "checking" ? "#888" :
+              "#c62828",
+            whiteSpace: "nowrap",
+          }}
+          title="Web MIDI looks for an output port named exactly 'LMP_TAB'"
+        >
+          {midiPortStatus === "connected" && "● LMP_TAB connected"}
+          {midiPortStatus === "checking" && "● Checking MIDI…"}
+          {midiPortStatus === "not-found" && "○ LMP_TAB not found"}
+          {midiPortStatus === "denied" && "○ MIDI access denied"}
+          {midiPortStatus === "unsupported" && "○ Browser has no Web MIDI"}
+        </div>
         <Nav />
       </div>
 
