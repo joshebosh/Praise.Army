@@ -47,6 +47,44 @@ html {
   }
 }
 
+/* Velocity picker: two 8x8 groups, same shrink-to-fit approach as
+   .midi-grid above -- side-by-side in landscape, stacked in portrait,
+   each group kept square so buttons stay proportional instead of
+   stretching into tall narrow rectangles. */
+.velocity-picker-grid {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+@media (orientation: landscape) {
+  .velocity-picker-grid {
+    flex-direction: row;
+  }
+}
+
+@media (orientation: portrait) {
+  .velocity-picker-grid {
+    flex-direction: column;
+  }
+}
+
+.velocity-picker-group {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  gap: 0.35rem;
+  aspect-ratio: 1 / 1;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 0;
+  min-height: 0;
+  margin: 0 auto;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;

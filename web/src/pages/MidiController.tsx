@@ -956,22 +956,17 @@ const MidiController: React.FC = () => {
           >
             <h2 className="text-white text-2xl font-bold mb-4 text-center">Select Velocity (0-127)</h2>
             <div
-              className="grid grid-cols-2 gap-4 w-full"
+              className="velocity-picker-grid"
               style={{ height: 'calc(90vh - 8rem)' }}
             >
               {/* Left 8x8 Grid (0-63) - Lighter Grey */}
-              <div
-                className="grid gap-2"
-                style={{
-                  gridTemplateColumns: 'repeat(8, 1fr)',
-                  gridTemplateRows: 'repeat(8, 1fr)'
-                }}
-              >
+              <div className="velocity-picker-group">
                 {Array.from({ length: 64 }, (_, i) => (
                   <button
                     key={i}
                     onClick={() => handleVelocitySelect(i)}
                     className="bg-gray-500 hover:bg-gray-400 text-white font-bold rounded transition-colors flex items-center justify-center"
+                    style={{ containerType: "inline-size", fontSize: "clamp(8px, 28cqw, 20px)", overflow: "hidden" } as React.CSSProperties}
                     title={`Velocity: ${i} (0x${i.toString(16).toUpperCase().padStart(2, '0')})`}
                   >
                     {i}
@@ -980,18 +975,13 @@ const MidiController: React.FC = () => {
               </div>
 
               {/* Right 8x8 Grid (64-127) - Darker Grey */}
-              <div
-                className="grid gap-2"
-                style={{
-                  gridTemplateColumns: 'repeat(8, 1fr)',
-                  gridTemplateRows: 'repeat(8, 1fr)'
-                }}
-              >
+              <div className="velocity-picker-group">
                 {Array.from({ length: 64 }, (_, i) => (
                   <button
                     key={i + 64}
                     onClick={() => handleVelocitySelect(i + 64)}
                     className="bg-gray-700 hover:bg-gray-600 text-white font-bold rounded transition-colors flex items-center justify-center"
+                    style={{ containerType: "inline-size", fontSize: "clamp(8px, 28cqw, 20px)", overflow: "hidden" } as React.CSSProperties}
                     title={`Velocity: ${i + 64} (0x${(i + 64).toString(16).toUpperCase().padStart(2, '0')})`}
                   >
                     {i + 64}
