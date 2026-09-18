@@ -865,13 +865,15 @@ const MidiController: React.FC = () => {
               relative
             `}
             style={{
-              fontSize: "clamp(0.75rem, 3.2vw, 2rem)",
+              containerType: "inline-size",
+              fontSize: "clamp(0.5rem, 15cqw, 1.4rem)",
               width: "100%",
               height: "100%",
               minWidth: 0,
               minHeight: 0,
+              overflow: "hidden",
               ...getButtonColor(button).style,
-            }}
+            } as React.CSSProperties}
             title={`MIDI: ${button.midi}\nMode: ${getModeLabel(
               button.mode,
             )}${button.group ? `\nGroup: ${button.group}` : ""}${button.group === 2 && button.subState !== undefined ? `\nSubState: ${button.subState}` : ""}`}
@@ -879,7 +881,7 @@ const MidiController: React.FC = () => {
             {button.ref !== undefined && (
               <span
                 className="absolute left-1 top-0"
-                style={{ fontSize: "clamp(0.45rem, 1.3vw, 0.9rem)" }}
+                style={{ fontSize: "clamp(0.4rem, 8cqw, 0.65rem)" }}
               >
                 {button.ref}
               </span>
