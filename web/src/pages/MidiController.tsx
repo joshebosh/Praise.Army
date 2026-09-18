@@ -866,7 +866,7 @@ const MidiController: React.FC = () => {
             `}
             style={{
               containerType: "inline-size",
-              fontSize: "clamp(0.5rem, 15cqw, 1.4rem)",
+              fontSize: "clamp(8px, 15cqw, 22px)",
               width: "100%",
               height: "100%",
               minWidth: 0,
@@ -881,7 +881,7 @@ const MidiController: React.FC = () => {
             {button.ref !== undefined && (
               <span
                 className="absolute left-1 top-0"
-                style={{ fontSize: "clamp(0.4rem, 8cqw, 0.65rem)" }}
+                style={{ fontSize: "clamp(6px, 8cqw, 10px)" }}
               >
                 {button.ref}
               </span>
