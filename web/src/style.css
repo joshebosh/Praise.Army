@@ -12,6 +12,11 @@
   box-sizing: border-box;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
 /* Two 8x8 MIDI grids: side-by-side in landscape, stacked in portrait.
    max-width/max-height: 100% + aspect-ratio lets the browser shrink
    this to fit whatever space is actually available (accounting for
