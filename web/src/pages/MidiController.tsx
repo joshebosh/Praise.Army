@@ -904,7 +904,7 @@ const MidiController: React.FC = () => {
   };
 
   return (
-    <div className="w-screen h-screen flex flex-col" style={{ overflow: "hidden" }}>
+    <div className="w-screen flex flex-col" style={{ height: "100dvh", overflow: "hidden" }}>
       {/* Header with Nav */}
       <div style={{ backgroundColor: "#fff", borderBottom: "1px solid #ccc", padding: "0.5rem 1rem", display: "flex", justifyContent: "space-between", alignItems: "center", flexShrink: 0, gap: "0.75rem" }}>
         <h1 style={{ margin: 0, color: "#556b2f", fontSize: "1.1rem" }}>MIDI Controller</h1>

@@ -12,18 +12,24 @@
   box-sizing: border-box;
 }
 
-/* Two 8x8 MIDI grids: side-by-side in landscape, stacked in portrait */
+/* Two 8x8 MIDI grids: side-by-side in landscape, stacked in portrait.
+   max-width/max-height: 100% + aspect-ratio lets the browser shrink
+   this to fit whatever space is actually available (accounting for
+   real visible height, not fragile vw/vh arithmetic) without ever
+   overflowing or requiring scroll. */
 .midi-grid {
   display: grid;
   gap: 0.5%;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
 }
 
 @media (orientation: landscape) {
   .midi-grid {
     grid-template-columns: 1fr 1fr;
     grid-template-rows: 1fr;
-    max-width: calc(100vh * 2 - 2rem);
-    max-height: calc(50vw - 1rem);
     aspect-ratio: 2 / 1;
   }
 }
@@ -32,8 +38,6 @@
   .midi-grid {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr 1fr;
-    max-width: calc(50vh - 1rem);
-    max-height: calc(100vw * 2 - 2rem);
     aspect-ratio: 1 / 2;
   }
 }
