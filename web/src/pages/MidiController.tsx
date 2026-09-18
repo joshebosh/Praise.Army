@@ -881,7 +881,7 @@ const MidiController: React.FC = () => {
             {button.ref !== undefined && (
               <span
                 className="absolute left-1 top-0"
-                style={{ fontSize: "clamp(6px, 8cqw, 10px)" }}
+                style={{ fontSize: "clamp(9px, 11cqw, 13px)" }}
               >
                 {button.ref}
               </span>
